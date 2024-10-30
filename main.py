@@ -32,6 +32,7 @@ def main():
         episode_return = 0
         state = env.reset()
         done = False
+        12
         while total_step<=fixed_step:
             total_step+=1
             action = agent.take_action(state)
