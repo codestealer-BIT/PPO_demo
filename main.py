@@ -6,7 +6,7 @@ import numpy as np
 from ppo import PPO
 def main():
     actor_lr = 3e-4
-    critic_lr = 1e-3#面对复杂任务时，这个值最好降低
+    critic_lr = 1e-3#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想
     hidden_dim = 128
     gamma = 0.99#平衡过程奖励和结果奖励
     lmbda = 0.95
@@ -32,7 +32,6 @@ def main():
         episode_return = 0
         state = env.reset()
         done = False
-        12
         while total_step<=fixed_step:
             total_step+=1
             action = agent.take_action(state)
