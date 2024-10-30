@@ -5,12 +5,12 @@ import rl_utils
 import numpy as np
 from ppo import PPO
 def main():
-    actor_lr = 1e-3
-    critic_lr = 1e-2
+    actor_lr = 3e-4
+    critic_lr = 1e-3#面对复杂任务时，这个值最好降低
     hidden_dim = 128
     gamma = 0.99#平衡过程奖励和结果奖励
     lmbda = 0.95
-    epochs = 5#原来是10
+    epochs = 10#原来是10
     eps = 0.2
     batch_size=128
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
@@ -26,7 +26,7 @@ def main():
                 epochs, eps, gamma, batch_size,device)
     num_epi=0
     return_list = []
-    for i in range(1000):
+    for i in range(2000):
         transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
         total_step=0
         episode_return = 0
