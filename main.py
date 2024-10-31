@@ -5,17 +5,17 @@ import rl_utils
 import numpy as np
 from ppo import PPO
 def main():
-    actor_lr = 3e-4
-    critic_lr = 1e-3#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想
+    actor_lr = 1e-3
+    critic_lr = 1e-2#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想
     hidden_dim = 128
     gamma = 0.99#平衡过程奖励和结果奖励
     lmbda = 0.95
-    epochs = 10#原来是10
+    epochs = 5#原来是10
     eps = 0.2
     batch_size=128
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
         "cpu")
-    fixed_step=2048
+    fixed_epi=10
     env_name = 'LunarLander-v2'
     env = gym.make(env_name)
     env.seed(0)
@@ -28,12 +28,11 @@ def main():
     return_list = []
     for i in range(2000):
         transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
-        total_step=0
+        total_epi=0
         episode_return = 0
         state = env.reset()
         done = False
-        while total_step<=fixed_step:
-            total_step+=1
+        while total_epi<fixed_epi:
             action = agent.take_action(state)
             next_state, reward, done, _ = env.step(action)
             transition_dict['states'].append(state)
@@ -45,11 +44,12 @@ def main():
             episode_return += reward
             if done:
                 num_epi+=1
+                total_epi+=1
                 return_list.append(episode_return)
                 episode_return = 0
                 state = env.reset()
                 done = False
-        print(f"iteration{i}: average return of last 100 episodes is {np.mean(return_list[-100:])},num_epi={num_epi}")
+        print(f"iteration{i}: average return of last 100 episodes is {np.mean(return_list[-100:])}")
         agent.update(transition_dict)#隔 个回合更新一次
     episodes_list = list(range(len(return_list)))
     plt.plot(episodes_list, return_list)

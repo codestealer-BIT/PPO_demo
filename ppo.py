@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import rl_utils
-
+torch.manual_seed(0)
 class PolicyNet(torch.nn.Module):
     def __init__(self, state_dim, hidden_dim, action_dim):
         super(PolicyNet, self).__init__()
@@ -63,7 +63,7 @@ class PPO:
 
         # 基于小批量的更新
         num_samples = states.size(0)
-        indices = torch.randperm(num_samples)  # 随机打乱索引
+        indices = torch.randperm(num_samples)  # 随机打乱索引，这里是有随机性的
 
         for _ in range(self.epochs):
             for start in range(0, num_samples, self.batch_size):
