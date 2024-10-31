@@ -48,7 +48,7 @@ class PPO:
         action = action_dist.sample()
         return action.item()
 
-    def update(self, transition_dict):
+    def offline_train(self, transition_dict):
         states = torch.tensor(transition_dict['states'],
                               dtype=torch.float).to(self.device)
         actions = torch.tensor(transition_dict['actions']).view(-1, 1).to(self.device)
