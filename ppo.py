@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
 import rl_utils
 torch.manual_seed(0)
@@ -27,8 +28,8 @@ class ValueNet(torch.nn.Module):
 class PPO:
     ''' PPO算法,采用截断方式 '''
     def __init__(self, state_dim, hidden_dim, action_dim, actor_lr, critic_lr,
-                 lmbda, epochs, eps, gamma, batch_size,device):
-        self.batch_size=batch_size
+                 lmbda, epochs, eps, gamma, minibatch_size,device):
+        self.minibatch_size=minibatch_size
         self.actor = PolicyNet(state_dim, hidden_dim, action_dim).to(device)
         self.critic = ValueNet(state_dim, hidden_dim).to(device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(),
@@ -56,26 +57,20 @@ class PPO:
         next_states = torch.tensor(transition_dict['next_states'], dtype=torch.float).to(self.device)
         dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1, 1).to(self.device)
 
+
         td_target = rewards + self.gamma * self.critic(next_states) * (1 - dones)
         td_delta = td_target - self.critic(states)
         advantage = rl_utils.compute_advantage(self.gamma, self.lmbda, td_delta.cpu()).to(self.device)
         old_log_probs = torch.log(self.actor(states).gather(1, actions)).detach()
 
-        # 基于小批量的更新
-        num_samples = states.size(0)
-        indices = torch.randperm(num_samples)  # 随机打乱索引，这里是有随机性的
+        # 创建 TensorDataset
+        dataset = TensorDataset(states, actions, advantage,old_log_probs,td_target)
+
+        # 创建 DataLoader
+        dataloader = DataLoader(dataset, self.minibatch_size, shuffle=True)
 
         for _ in range(self.epochs):
-            for start in range(0, num_samples, self.batch_size):
-                end = start + self.batch_size
-                batch_indices = indices[start:end]  # 获取当前小批量的索引
-
-                # 获取小批量的数据
-                batch_states = states[batch_indices]
-                batch_actions = actions[batch_indices]
-                batch_advantage = advantage[batch_indices]
-                batch_old_log_probs = old_log_probs[batch_indices]
-                batch_td_target = td_target[batch_indices]
+            for batch_states,batch_actions,batch_advantage,batch_old_log_probs,batch_td_target in dataloader:
 
                 log_probs = torch.log(self.actor(batch_states).gather(1, batch_actions))
                 ratio = torch.exp(log_probs - batch_old_log_probs)
@@ -90,3 +85,7 @@ class PPO:
                 critic_loss.backward()
                 self.actor_optimizer.step()
                 self.critic_optimizer.step()
+    
+    def save(self):
+        torch.save({ 'actor_state_dict': self.actor.state_dict(),'critic_state_dict': self.critic.state_dict(),}, 'ppo_agent.pth') 
+        

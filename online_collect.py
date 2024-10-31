@@ -1,4 +1,4 @@
-import numpy as np
+
 def online_collect(agent,env,fixed_epi,return_list):
     transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
     total_epi=0
