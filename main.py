@@ -13,10 +13,10 @@ def main():
     lmbda = 0.95
     epochs = 5#原来是10
     eps = 0.2
-    minibatch_size=1280#面对复杂任务时，这个值最好变大，详情可见ppo原文，update耗时很严重
+    minibatch_size=12800#面对复杂任务时，这个值最好变大，详情可见ppo原文，update耗时很严重
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
         "cpu")
-    fixed_epi=100#改的是这个
+    fixed_epi=1000#改的是这个
     env_name = 'LunarLander-v2'
     env = gym.make(env_name)
     env.seed(0)
