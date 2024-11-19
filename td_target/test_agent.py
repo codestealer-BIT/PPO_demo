@@ -1,5 +1,5 @@
 import torch
-from ppo import PPO
+from td_target.ppo import PPO
 import gym
 actor_lr = 1e-3
 critic_lr = 1e-2#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想

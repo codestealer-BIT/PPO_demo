@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
-import rl_utils
+import td_target.rl_utils as rl_utils
 torch.manual_seed(0)
 class PolicyNet(torch.nn.Module):
     def __init__(self, state_dim, hidden_dim, action_dim):
