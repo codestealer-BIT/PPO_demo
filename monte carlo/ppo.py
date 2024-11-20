@@ -1,7 +1,6 @@
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
-import rl_utils as rl_utils
 torch.manual_seed(0)
 class PolicyNet(torch.nn.Module):
     def __init__(self, state_dim, hidden_dim, action_dim):
@@ -58,9 +57,10 @@ class PPO:
         dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1, 1).to(self.device)
 
 
-        td_target = rewards + self.gamma * self.critic(next_states) * (1 - dones)
-        td_delta = td_target - self.critic(states)
-        advantage = rl_utils.compute_advantage(self.gamma, self.lmbda, td_delta.cpu()).to(self.device)
+        td_target = torch.tensor(transition_dict['returns'], dtype=torch.float).view(-1, 1).to(self.device)
+        advantage = td_target-self.critic(states).to(self.device)
+        advantage=advantage.detach()#没有这一步的话，由于advantage参与了actor_loss的计算，在actor_loss.backward()的时候会
+        #释放advantage中self.critic的计算图，然后critic_loss.backward()的时候中critic的计算图就不存在了。所以必须先把critic的计算图detach掉
         old_log_probs = torch.log(self.actor(states).gather(1, actions)).detach()
 
         # 创建 TensorDataset
