@@ -52,9 +52,9 @@ class PPO:
         states = torch.tensor(transition_dict['states'],
                               dtype=torch.float).to(self.device)
         actions = torch.tensor(transition_dict['actions']).view(-1, 1).to(self.device)
-        rewards = torch.tensor(transition_dict['rewards'], dtype=torch.float).view(-1, 1).to(self.device)
-        next_states = torch.tensor(transition_dict['next_states'], dtype=torch.float).to(self.device)
-        dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1, 1).to(self.device)
+        # rewards = torch.tensor(transition_dict['rewards'], dtype=torch.float).view(-1, 1).to(self.device)
+        # next_states = torch.tensor(transition_dict['next_states'], dtype=torch.float).to(self.device)
+        # dones = torch.tensor(transition_dict['dones'], dtype=torch.float).view(-1, 1).to(self.device)
 
 
         td_target = torch.tensor(transition_dict['returns'], dtype=torch.float).view(-1, 1).to(self.device)
@@ -62,10 +62,9 @@ class PPO:
         advantage=advantage.detach()#没有这一步的话，由于advantage参与了actor_loss的计算，在actor_loss.backward()的时候会
         #释放advantage中self.critic的计算图，然后critic_loss.backward()的时候中critic的计算图就不存在了。所以必须先把critic的计算图detach掉
         old_log_probs = torch.log(self.actor(states).gather(1, actions)).detach()
-
+ 
         # 创建 TensorDataset
         dataset = TensorDataset(states, actions, advantage,old_log_probs,td_target)
-
         # 创建 DataLoader
         dataloader = DataLoader(dataset, self.minibatch_size, shuffle=True)
 
@@ -78,7 +77,7 @@ class PPO:
                 surr2 = torch.clamp(ratio, 1 - self.eps, 1 + self.eps) * batch_advantage  # 截断
                 actor_loss = torch.mean(-torch.min(surr1, surr2))  # PPO损失函数
                 critic_loss = torch.mean(F.mse_loss(self.critic(batch_states), batch_td_target.detach()))
-
+                print(critic_loss)
                 self.actor_optimizer.zero_grad()
                 self.critic_optimizer.zero_grad()
                 actor_loss.backward()

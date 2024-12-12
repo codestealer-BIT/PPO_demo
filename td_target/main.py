@@ -17,7 +17,7 @@ def main():
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
         "cpu")
     fixed_epi=10#改的是这个
-    env_name = 'LunarLander-v2'
+    env_name = ''
     env = gym.make(env_name)
     env.seed(0)
     torch.manual_seed(0)
