@@ -51,7 +51,7 @@ def compute_returns(rewards,gamma):
 
 
 def online_collect(agent,env,fixed_epi,return_list,gamma):
-    transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': [],'returns':[]}
+    transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': [],'returns':[],'probs':[]}
     total_epi=0
     episode_return = []
     state = env.reset()
@@ -59,13 +59,14 @@ def online_collect(agent,env,fixed_epi,return_list,gamma):
     while total_epi<fixed_epi:
         # print(state,end=' ')
         # state = bucket(state)
-        action = agent.take_action(state)
+        action,prob = agent.take_action(state)
         next_state, reward, done, _ = env.step(action)
         transition_dict['states'].append(state)
         transition_dict['actions'].append(action)
         transition_dict['next_states'].append(next_state)
         transition_dict['rewards'].append(reward)
         transition_dict['dones'].append(done)
+        transition_dict['probs'].append(prob)
         state = next_state
         episode_return.append(reward)
         if done:
@@ -76,5 +77,5 @@ def online_collect(agent,env,fixed_epi,return_list,gamma):
             episode_return = []
             state = env.reset()
             done = False
-    return transition_dict['states'],transition_dict['actions'],transition_dict['returns']
+    return transition_dict['states'],transition_dict['actions'],transition_dict['probs'],transition_dict['returns']
     

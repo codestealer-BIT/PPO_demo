@@ -1,8 +1,10 @@
 import gym
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-from ppo import PPO
+from ppo import PPO,PolicyNet,ValueNet
 from online_collect import online_collect,bucket
 from rl_utils import moving_average
 import os
@@ -29,13 +31,21 @@ def main():
     env.seed(1)
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
-    agent = PPO(state_dim, hidden_dim, action_dim, actor_lr, critic_lr, lmbda,
-                epochs, eps, gamma, minibatch_size)
+    actor_net = PolicyNet(state_dim, hidden_dim, action_dim)
+    critic_net = ValueNet(state_dim, hidden_dim)
+    agent = PPO(actor_net,critic_net,actor_lr,critic_lr,eps)
     return_list = []
 
-    for i in range(100):
-        states,actions,returns=online_collect(agent,env,fixed_epi,return_list,gamma)
-        agent.offline_train(np.array(states),np.array(actions),np.array(returns))#隔 个回合更新一次
+    for i in range(500):
+        states,actions,old_log_probs,returns=online_collect(agent,env,fixed_epi,return_list,gamma)
+        old_log_probs = tf.gather(np.array(old_log_probs), actions, axis=1, batch_dims=1)
+        dataset = tf.data.Dataset.from_tensor_slices((np.array(states).astype(np.float32), np.array(actions).astype(np.int32).reshape(-1),old_log_probs,np.array(returns).astype(np.float32).reshape(-1)))
+        dataset = dataset.shuffle(buffer_size=1024).batch(minibatch_size)
+        
+        for _ in range(epochs):
+            for batch_states, batch_actions,batch_old_log_probs,batch_returns in dataset:
+                agent.train_one_batch(batch_states,batch_actions,batch_old_log_probs,batch_returns)
+        # print(agent.actor.weights)
         print(f"iteration{i}: average return of last 100 episodes is {np.mean(return_list[-100:])}")
     #agent.save()
 
