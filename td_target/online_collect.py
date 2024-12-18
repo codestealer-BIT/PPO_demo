@@ -1,4 +1,5 @@
-
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 def online_collect(agent,env,fixed_epi,return_list):
     transition_dict = {'states': [], 'actions': [], 'next_states': [], 'rewards': [], 'dones': []}
     total_epi=0
@@ -8,6 +9,7 @@ def online_collect(agent,env,fixed_epi,return_list):
     while total_epi<fixed_epi:
         action = agent.take_action(state)
         next_state, reward, done, _ = env.step(action)
+        state=MinMaxScaler().fit_transform(state.reshape(-1,1)).reshape(-1)
         transition_dict['states'].append(state)
         transition_dict['actions'].append(action)
         transition_dict['next_states'].append(next_state)

@@ -13,11 +13,11 @@ def main():
     lmbda = 0.95
     epochs = 5#原来是10
     eps = 0.2 
-    minibatch_size=128#面对复杂任务时，这个值最好变大，详情可见ppo原文，update耗时很严重
+    minibatch_size=128000#面对复杂任务时，这个值最好变大，详情可见ppo原文，update耗时很严重
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
         "cpu")
-    fixed_epi=10#改的是这个
-    env_name = ''
+    fixed_epi=1#改的是这个
+    env_name = 'Pong-ram-v0'
     env = gym.make(env_name)
     env.seed(0)
     torch.manual_seed(0)
@@ -30,7 +30,7 @@ def main():
     for i in range(100):
         transition_dict=online_collect(agent,env,fixed_epi,return_list)
         agent.offline_train(transition_dict)#隔 个回合更新一次
-        print(f"iteration{i}: average return of last 100 episodes is {np.mean(return_list[-100:])}")
+        print(f"iteration{i}: average return of last 1 episodes is {np.mean(return_list[-1:])}")
     #agent.save()
 
     episodes_list = list(range(len(return_list)))

@@ -25,6 +25,7 @@ class PolicyNet(tf.keras.Model):
 
         # 全连接层和 Dropout 层
         self.dense1 = tf.keras.layers.Dense(hidden_dim, activation='relu')
+        # self.dense2 = tf.keras.layers.Dense(64, activation='relu')
         self.output_layer = tf.keras.layers.Dense(action_dim, activation='softmax', name='output')
 
     def call(self, x):
@@ -52,8 +53,8 @@ class PolicyNet(tf.keras.Model):
         
         # 全连接层 + Dropout
         x_dense1 = self.dense1(x)
-        
         # 输出层
+        # x_dense2=self.dense2(x_dense1)
         x_output = self.output_layer(x_dense1)
 
         return x_output
@@ -96,7 +97,12 @@ class PPO:
             action_probs_target = tf.gather(actions_prob_predict, actions, axis=1, batch_dims=1) # shape: [batch_size]
             ratio = tf.exp(tf.math.log(action_probs_target) - tf.math.log(action_probs_behavior))
             clipped_ratio = tf.clip_by_value(ratio, 1 - self.clip_epsilon, 1 + self.clip_epsilon)
-            actor_loss = -tf.reduce_mean(tf.minimum(ratio*advantages, clipped_ratio*advantages))
+            # 计算熵
+            entropy = -tf.reduce_sum(actions_prob_predict * tf.math.log(actions_prob_predict + 1e-10), axis=1)
+            b=tf.reduce_mean(entropy)
+            # 更新损失函数
+            actor_loss = -tf.reduce_mean(tf.minimum(ratio*advantages, clipped_ratio*advantages)) 
+
 
         actor_grads = tape_actor.gradient(actor_loss, self.actor.trainable_variables)
         self.actor_optimizer.apply_gradients(zip(actor_grads, self.actor.trainable_variables))

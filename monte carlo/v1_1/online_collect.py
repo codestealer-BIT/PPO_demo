@@ -1,5 +1,5 @@
 import numpy as np
-
+from sklearn.preprocessing import MinMaxScaler
 # 分桶函数
 def bucketize(value, min_val, max_val, num_buckets):
     # 限制输入值在指定的范围内
@@ -56,11 +56,14 @@ def online_collect(agent,env,fixed_epi,return_list,gamma):
     episode_return = []
     state = env.reset()
     done = False
+    scaler = MinMaxScaler()
     while total_epi<fixed_epi:
         # print(state,end=' ')
         # state = bucket(state)
+        state = scaler.fit_transform(state.reshape(-1,1)).reshape(-1)
         action,prob = agent.take_action(state)
         next_state, reward, done, _ = env.step(action)
+        next_state = scaler.fit_transform(next_state.reshape(-1,1)).reshape(-1)
         transition_dict['states'].append(state)
         transition_dict['actions'].append(action)
         transition_dict['next_states'].append(next_state)
