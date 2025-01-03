@@ -1,18 +1,19 @@
 import torch
-from td_target.ppo import PPO
+from ppo import PPO
 import gym
-actor_lr = 1e-3
-critic_lr = 1e-2#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想
+import time
+actor_lr = 1e-4
+critic_lr = 1e-4#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想
 hidden_dim = 128
 gamma = 0.99#平衡过程奖励和结果奖励
 lmbda = 0.95
-epochs = 5#原来是10
+epochs = 3#原来是10
 eps = 0.2
-minibatch_size=128#面对复杂任务时，这个值最好变大，详情可见ppo原文
+minibatch_size=256#面对复杂任务时，这个值最好变大，详情可见ppo原文
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
     "cpu")
-fixed_epi=10
-env_name = 'LunarLander-v2'
+fixed_epi=200
+env_name = 'Pong-ram-v0'
 env = gym.make(env_name)
 env.seed(0)
 torch.manual_seed(0)
@@ -30,13 +31,15 @@ agent.critic.eval()  # 设置为评估模式
 
     # 渲染模型的表现
 num_episodes = 50  # 渲染的轮次
+done=False
 for episode in range(num_episodes):
     state = env.reset()
-    done = False
+    time.sleep(0.05)
     while not done:
-        env.render()  # 渲染当前环境
         action = agent.take_action(state)  # 使用训练好的代理选择动作
         state, reward, done, _ = env.step(action)  # 执行动作
-    print(f"Episode {episode + 1} finished.")
+        env.render()  # 渲染当前环境
+        time.sleep(0.05)
+    # print(f"Episode {episode + 1} finished.")
 
 env.close()  # 关闭环境

@@ -77,7 +77,6 @@ class PPO:
                 surr2 = torch.clamp(ratio, 1 - self.eps, 1 + self.eps) * batch_advantage  # 截断
                 actor_loss = torch.mean(-torch.min(surr1, surr2))  # PPO损失函数
                 critic_loss = torch.mean(F.mse_loss(self.critic(batch_states), batch_td_target.detach()))
-                print(critic_loss)
                 self.actor_optimizer.zero_grad()
                 self.critic_optimizer.zero_grad()
                 actor_loss.backward()

@@ -56,14 +56,14 @@ def online_collect(agent,env,fixed_epi,return_list,gamma):
     episode_return = []
     state = env.reset()
     done = False
-    scaler = MinMaxScaler()
     while total_epi<fixed_epi:
         # print(state,end=' ')
         # state = bucket(state)
-        state = scaler.fit_transform(state.reshape(-1,1)).reshape(-1)
+        state=state.astype(np.float32)
+        state/=255
         action,prob = agent.take_action(state)
         next_state, reward, done, _ = env.step(action)
-        next_state = scaler.fit_transform(next_state.reshape(-1,1)).reshape(-1)
+        # next_state = scaler.fit_transform(next_state.reshape(-1,1)).reshape(-1)
         transition_dict['states'].append(state)
         transition_dict['actions'].append(action)
         transition_dict['next_states'].append(next_state)

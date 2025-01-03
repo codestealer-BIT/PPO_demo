@@ -11,26 +11,26 @@ def main():
     hidden_dim = 128
     gamma = 0.99#平衡过程奖励和结果奖励
     lmbda = 0.95
-    epochs = 5#原来是10
+    epochs = 3#原来是10
     eps = 0.2 
-    minibatch_size=128000#面对复杂任务时，这个值最好变大，详情可见ppo原文，update耗时很严重
+    minibatch_size=256#面对复杂任务时，这个值最好变大，详情可见ppo原文，update耗时很严重
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
         "cpu")
-    fixed_epi=1#改的是这个
+    fixed_epi=10#改的是这个
     env_name = 'Pong-ram-v0'
     env = gym.make(env_name)
-    env.seed(0)
-    torch.manual_seed(0)
+    env.seed(1)
+    torch.manual_seed(1)
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.n
     agent = PPO(state_dim, hidden_dim, action_dim, actor_lr, critic_lr, lmbda,
                 epochs, eps, gamma, minibatch_size,device)
     return_list = []
 
-    for i in range(100):
+    for i in range(1000):
         transition_dict=online_collect(agent,env,fixed_epi,return_list)
         agent.offline_train(transition_dict)#隔 个回合更新一次
-        print(f"iteration{i}: average return of last 1 episodes is {np.mean(return_list[-1:])}")
+        print(f"iteration{i}: average return of last 10 episodes is {np.mean(return_list[-10:])}")
     #agent.save()
 
     episodes_list = list(range(len(return_list)))

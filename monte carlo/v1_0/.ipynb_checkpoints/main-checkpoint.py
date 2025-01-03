@@ -8,8 +8,8 @@ from rl_utils import moving_average
 
 # 确保文件为空（如果存在旧文件）
 def main():
-    actor_lr = 0.5e-4
-    critic_lr = 0.5e-4#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想
+    actor_lr = 1e-3
+    critic_lr = 1e-2#面对复杂任务时，这个值最好降低，调到过3e-4，但是结果不是很理想
     hidden_dim = 128
     gamma = 0.99#平衡过程奖励和结果奖励
     lmbda = 0.95
@@ -18,7 +18,7 @@ def main():
     minibatch_size=256#面对复杂任务时，这个值最好变大，详情可见ppo原文，update耗时很严重
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device(
         "cpu")
-    fixed_epi=200#改的是这个
+    fixed_epi=10#改的是这个
     env_name = 'Pong-ram-v0'
     env = gym.make(env_name)
     env.seed(0)
@@ -28,13 +28,11 @@ def main():
     agent = PPO(state_dim, hidden_dim, action_dim, actor_lr, critic_lr, lmbda,
                 epochs, eps, gamma, minibatch_size,device)
     return_list = []
-    checkpoint = torch.load('ppo_agent.pth')
-    agent.actor.load_state_dict(checkpoint['actor_state_dict'])
-    agent.critic.load_state_dict(checkpoint['critic_state_dict'])
-    for i in range(20000):
+
+    for i in range(2000):
         transition_dict=online_collect(agent,env,fixed_epi,return_list,gamma)
         agent.offline_train(transition_dict)
-        print(f"iteration{i}: average return of last 100 episodes is {np.mean(return_list[-200:])}")
+        print(f"iteration{i}: average return of last 100 episodes is {np.mean(return_list[-10:])}")
     agent.save()
 
     episodes_list = list(range(len(return_list)))

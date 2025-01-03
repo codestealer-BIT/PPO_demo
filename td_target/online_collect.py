@@ -7,9 +7,10 @@ def online_collect(agent,env,fixed_epi,return_list):
     state = env.reset()
     done = False
     while total_epi<fixed_epi:
+        state=state.astype(np.float32)
+        state/=255
         action = agent.take_action(state)
         next_state, reward, done, _ = env.step(action)
-        state=MinMaxScaler().fit_transform(state.reshape(-1,1)).reshape(-1)
         transition_dict['states'].append(state)
         transition_dict['actions'].append(action)
         transition_dict['next_states'].append(next_state)

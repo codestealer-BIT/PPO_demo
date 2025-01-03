@@ -8,15 +8,11 @@ import numpy as np
 from ppo import PPO,PolicyNet,ValueNet
 from online_collect import online_collect,bucket
 from rl_utils import moving_average
-import os
 import random
 seed=1
-os.environ['PYTHONHASHSEED'] = str(seed) 
 random.seed(seed)
 np.random.seed(seed)
 tf.random.set_seed(seed)
-os.environ['TF_DETERMINISTIC_OPS'] = '1' #避免并行运算、GPU加速等带来的随机性
-from sklearn.preprocessing import MinMaxScaler
 def show(agent,env):
     num_episodes = 1  # 渲染的轮次
     for episode in range(num_episodes):
@@ -25,7 +21,8 @@ def show(agent,env):
         while not done:
             env.render()  # 渲染当前环境
             time.sleep(0.005)
-            state = MinMaxScaler().fit_transform(state.reshape(-1,1)).reshape(-1)
+            state=state.astype(np.float32)
+            state/=255
             action,_ = agent.take_action(state)  # 使用训练好的代理选择动作
             state, reward, done, _ = env.step(action)  # 执行动作
         print(f"Episode {episode + 1} finished.")
@@ -40,7 +37,7 @@ def main():
     epochs = 3#原来是10
     eps = 0.2
     minibatch_size=256#由于正样本太少，BP多次可能会使梯度方向变坏
-    fixed_epi=10#改的是这个
+    fixed_epi=10#原来是10 256 改成5 128
     env_name = 'Pong-ram-v0'
     env = gym.make(env_name)
     env.seed(1)
@@ -50,8 +47,7 @@ def main():
     critic_net = ValueNet(state_dim, hidden_dim)
     agent = PPO(actor_net,critic_net,actor_lr,critic_lr,eps)
     return_list = []
-
-    for i in range(5000):
+    for i in range(2000):
         states,actions,old_log_probs,returns=online_collect(agent,env,fixed_epi,return_list,gamma)
         old_log_probs = tf.gather(np.array(old_log_probs), actions, axis=1, batch_dims=1)
         dataset = tf.data.Dataset.from_tensor_slices((np.array(states).astype(np.float32), np.array(actions).astype(np.int32).reshape(-1),old_log_probs,np.array(returns).astype(np.float32).reshape(-1)))
