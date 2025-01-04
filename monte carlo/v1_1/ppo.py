@@ -88,7 +88,7 @@ class PPO:
 
         # 1. compute advantage
         states_value = tf.squeeze(self.critic(states)) # shape: [batch_size]
-        advantages = tf.stop_gradient(returns - states_value) # shape: [batch_size]
+        advantages = tf.stop_gradient(returns - states_value) # shape: [batch_size] 12
 
         # 2. actor learn
         with tf.GradientTape() as tape_actor:
